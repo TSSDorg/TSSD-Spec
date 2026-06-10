@@ -66,9 +66,10 @@ both of them print on little endian like that: 123 => [123][0], but this doc pri
 
   E.g. : [Tint32] means a 32bits number, [-Tint32] means the type is Tint32, but this field unset, just as null in Database.
 
-####1. fixed length data(table 1)
+####fixed length data
  fixed length data are primary number, and the length are hinted by the Ttype, so TSSD omit it.
- Format: [Ttype][data] data is in Little Endian
+ Format: [Ttype][data], data is in Little Endian
+Table 1:
 
 | Ttype    | value | CPP type       | length(bytes) | range(hex)                               |
 | -------- | ----- | -------------- | ------------- | ---------------------------------------- |
@@ -85,8 +86,9 @@ both of them print on little endian like that: 123 => [123][0], but this doc pri
 | Tfloat64 | 21    | double         | 8             | 64-bit IEEE 754                          ||
 
 
-####2. dynamic length data(table 2)
+####dynamic length data
  Format: [Ttype][sizet][sizea][data]
+Table 2:
 
 | Ttype       | value  | following data              | sizea desc                          |
 | ----------- | -----  | --------------------------- | ----------------------------------- |
@@ -103,28 +105,28 @@ both of them print on little endian like that: 123 => [123][0], but this doc pri
 | Tuser       | 0x7F   | [sizet][user-define-data]   |                                     ||
 
 
-###3. basic dynamic length data
+###basic dynamic length data
 basic dynamic length data format: [Ttype][sizet][data], including Tstring, Ttime, Tschema, Traw, Tuser:
 
-####3.1 Tstring
+####Tstring
 format: [Tstring][sizet][data]
 Tstring is simple, follow a string length, then the string data
 ```
 string("Hello TSSD") => [Tstring][sizet=10]{"Hello TSSD"}
 ```
 
-####3.2 Tschema
+####Tschema
 format: [Tschema][sizet][data]
-Tschema works as Tstring, is import for TSSD, as it marshal data only without type name.
+Tschema works as Tstring, it is important for TSSD, as TSSD marshal data only without type name.
 **TSSD peer(reader and writer) should parse with the same schema.
 TSSD writer put schema in the header to specify the TSSD data schema.
-TSSD reader should validate the schema if match with local, should block unmarsh if not.**
+TSSD reader validate the schema if match with local, should block unmarsh if not.**
 User can define the schema content and validation algorithem themselves, even put a large json string with all object type names.
 ```
 Tschema("MyStruct_V2-0f0eff09d0") => [Tschema][sizet=22]{"MyStruct_V2-0f0eff09d0"}
 ```
 
-####3.3 Ttime
+####Ttime
 format: [Ttime][sizet][data]
 Ttime works as Tstring.
 it prensents for timestamp within RFC3339Nano format
@@ -132,16 +134,16 @@ it prensents for timestamp within RFC3339Nano format
 [Ttime][sizet=39]{"2023-06-08 11:34:50.371381984 +0000 UTC"}
 ```
 
-####3.4 Traw
+####Traw
 format: [Traw][sizet][data]
 Traw means raw data, TSSD just forward it without parse.
 
-####3.5 Tuser
+####Tuser
 format: [Tuser][sizet][data]
 Tuser means user define data, TSSD process as Traw now. 
 
 
-###4. composed data
+###composed data
 
 Tarray, Tarraym, Tobject, Tdict are composed struct, that means they are composed from some of fixed or dynamic length data, 
 **all of them can embed within others or themself. they will expand one by one when marshaling.**
@@ -149,7 +151,7 @@ the basic format is as that: [Ttype][SizeT][SizeA][data]
 list their format detail below with a sample and its explain
 
 
-####4.1 Tarray
+####Tarray
 format: [Tarray][sizet][sizea][data]
 Tarray presents dynamic array, sizea means element count in the array.
 ```
@@ -170,7 +172,7 @@ string[] = {"f", "bar"}
 | [sizet=3]     | 2             | the string contains 3 byte |
 | {"bar"}       | 3             | string[1] content: "bar"   |
 
-####4.2 Tarraym
+####Tarraym
 format: [Tarraym][Ttype][sizet][sizea][data]
 Tarraym is for the basic fixed length type array only, the following Ttype spec the real array element type.
 sizea means element count.
@@ -186,7 +188,7 @@ can also marshaled in Tarraym:
 ```
 compare with Tarray, it omit the repeat element Ttype to save storage. 
 
-####4.3 Tobject
+####Tobject
 format: [Tobject][sizet][sizea][data]
 Tobject means a object/struct/class, sizea means fields count in struct, data need expand field one by one.
 ```
@@ -206,10 +208,10 @@ struct { int32(123), string("foobar") }
 | {"foobar"}    | 5             | string content: "foobar"   |
 
 
-####4.4 Tdict
+####Tdict
 format: [Tdict][sizet][sizea][data]
 Tdict expand and mashaled as key value pair array, sizea means map node count.
-**Note: Tdict no guarantee the key not conflict or unique. **
+**Note: Tdict no guarantee the key order, not conflict or unique. **
 ```
 map{
     {int64(234): string("hello")},
@@ -232,3 +234,10 @@ map{
 | [Tstring]     | 1             | second node value type     |
 | [sizet=6]     | 2             | string length: 6           |
 | {"world!"}    | 6             | string content: "world!"   |
+
+
+###Tips
+1. be careful with the type that language or platform dependable, if you need TSSD data share cross platform.
+- int: length may vary in 32bits and 64bit.
+- unsigned number: Java does't implement it.
+- Tdict(map) key attribute may vary with the language: Go accepts basic type only, while CPP can accept complex struct.
