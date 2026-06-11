@@ -97,10 +97,12 @@ Table 2:
 | Tstring     | 22     | [sizet][chars]              |                                     |
 | Ttime       | 23     | [sizet][RFC3339Nano string] |                                     |
 | Tarray      | 24     | [sizet][sizea][data]        |                                     |
-| Tarraym     | 25     | [Ttype][sizet][sizea][data] | count of array elements            |
-| Tobject     | 26     | [sizet][sizea][data]        | count of the object(struct) fields |
-| Tdict       | 27     | [sizet][sizea][data]        | count of the dict(map) nodes       |
-| Traw        | 28     | [sizet][data]               |                                     |
+| Tarraym     | 25     | [Ttype][sizet][sizea][data] | count of array elements             |
+| Tobject     | 26     | [sizet][sizea][data]        | count of the object(struct) fields  |
+| Tdict       | 27     | [sizet][sizea][data]        | count of the dict(map) nodes        |
+| Tdictk      | 28     | [Ttype][sizet][...]         |                                     |
+| Tdictv      | 29     | [Ttype][sizet][...]         |                                     |
+| Traw        | 30     | [sizet][data]               |                                     |
 | Tschema     | 83('S')| [sizet][chars]              |                                     |
 | Thead       | 84('T')| ["SSD"]                     | 4 bytes MagicHead: "TSSD"           |
 | Tversion    | 86('V')| [version]                   |                                     |
@@ -221,32 +223,44 @@ struct { int32(123), string("foobar") }
 
 #### 5.4 Tdict
 
-format: [Tdict][sizet][sizea][data]
-Tdict expand and mashaled as key value pair array, sizea means map node count.
+format: [Tdict][sizet][sizea]{[Tdictk][k1][Tdictv][v1]}{[Tdictk][k2][Tictv][v2]}...
+Tdict expand and mashaled as key value pair array
+Tdictk marks a key begin and Tdictv marks a value begin
+the real data of k1, v1, k2, v2 begin with another Ttype and follow above rules
+sizea means map node count.
 **Note: Tdict no guarantee the key order, not conflict or unique. **
 ```
 map{
     {int64(234): string("hello")},
     {int64(678): string("world!")},
 } =>
-[Tdict][sizet=37][sizea=2][Tint64][234][Tstring][sizet=5]{"hello"}[Tint64][678][Tstring][sizet=6]{"world!"}
+[Tdict][sizet=41][sizea=2][Tdictk][Tint64][234][Tdickv][Tstring][sizet=5]{"hello"}[Tdictk][Tint64][678][Tdictv][Tstring][sizet=6]{"world!"}
 ```
 | value         | length(bytes) | desc                       |
 | ------------- | ------------- | -------------------------- |
 | [Tdict]       | 1             | dict(map) begin            |
-| [sizet=37]    | 2             | dict total size: 37        |
+| [sizet=41]    | 2             | dict total size: 41        |
 | [sizea=2]     | 2             | 2 map nodes                |
+| [Tdictk]      | 1             | a node key begin           |
 | [Tint64]      | 1             | first map node key type    |
 | [234]         | 8             | int64 value                |
+| [Tdictv]      | 1             | a node value begin         |
 | [Tstring]     | 1             | first node value type      |
 | [sizet=5]     | 2             | string length: 5           |
 | {"hello"}     | 5             | string content: "hello"    |
+| [Tdictk]      | 1             | a node key begin           |
 | [Tint64]      | 1             | second map node key type   |
 | [678]         | 8             | int64 value                |
+| [Tdictv]      | 1             | a node value begin         |
 | [Tstring]     | 1             | second node value type     |
 | [sizet=6]     | 2             | string length: 6           |
 | {"world!"}    | 6             | string content: "world!"   |
 
+#### 5.4 Tdictk and Tdictv
+
+Tdictk and Tdictv are used for mark map's key and value begin,
+the real data format determinted by the following Ttype after them
+see example at 5.3 Tdict
 
 ## Tips
 
