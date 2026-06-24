@@ -96,13 +96,14 @@ Table 2:
 | ----------- | -----  | --------------------------- | ----------------------------------- |
 | Tstring     | 22     | [sizet][chars]              |                                     |
 | Ttime       | 23     | [sizet][RFC3339Nano string] |                                     |
-| Tarray      | 24     | [sizet][sizea][data]        |                                     |
-| Tarraym     | 25     | [Ttype][sizet][sizea][data] | count of array elements             |
-| Tobject     | 26     | [sizet][sizea][data]        | count of the object(struct) fields  |
-| Tdict       | 27     | [sizet][sizea][data]        | count of the dict(map) nodes        |
-| Tdictk      | 28     | [Ttype][sizet][...]         |                                     |
-| Tdictv      | 29     | [Ttype][sizet][...]         |                                     |
-| Traw        | 30     | [sizet][data]               |                                     |
+| Tenum       | 24     | [sizet][enum string]        |                                     |
+| Tarray      | 25     | [sizet][sizea][data]        |                                     |
+| Tarraym     | 26     | [Ttype][sizet][sizea][data] | count of array elements             |
+| Tobject     | 27     | [sizet][sizea][data]        | count of the object(struct) fields  |
+| Tdict       | 28     | [sizet][sizea][data]        | count of the dict(map) nodes        |
+| Tdictk      | 29     | [Ttype][sizet][...]         |                                     |
+| Tdictv      | 30     | [Ttype][sizet][...]         |                                     |
+| Traw        | 31     | [sizet][data]               |                                     |
 | Tschema     | 83('S')| [sizet][chars]              |                                     |
 | Thead       | 84('T')| ["SSD"]                     | 4 bytes MagicHead: "TSSD"           |
 | Tversion    | 86('V')| [version]                   |                                     |
@@ -142,12 +143,21 @@ it prensents for timestamp within RFC3339Nano format
 [Ttime][sizet=39]{"2023-06-08 11:34:50.371381984 +0000 UTC"}
 ```
 
-#### 4.4 Traw
+#### 4.4 Tenum
+
+format: [Tenum][sizet][data]
+Tenum works as Tstring.
+it prensents for enum string
+```
+[Tenum][sizet=9]{"Color.Red"}
+```
+
+#### 4.5 Traw
 
 format: [Traw][sizet][data]
 Traw means raw data, TSSD just forward it without parse.
 
-#### 4.5 Tuser
+#### 4.6 Tuser
 
 format: [Tuser][sizet][data]
 Tuser means user define data, TSSD process as Traw now. 
