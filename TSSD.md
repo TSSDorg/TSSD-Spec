@@ -218,19 +218,6 @@ struct { int32(123), string("foobar") }
 | [sizet=5]     | 2             | the string contains 5 byte |
 | {"foobar"}    | 5             | string content: "foobar"   |
 
-#### 5.4 Tschema
-
-format: [Tschema][Tobject][sizet][sizea=3][data: "type-hash", "type", "content"]
-Tschema leads a Tobject, it specify TSSD's schema info, it is important for TSSD, as TSSD marshal data only without type name. normally marshal 3 string struct(object) into it.
-the first string is type hash, which is necessary.
-**TSSD peer(reader and writer) should share with the same schema.
-TSSD writer put schema in the header to specify the TSSD data schema.
-TSSD reader validate the schema if match with local with the type hash, should block unmarsh if not.**
-User can define the schema type and content , even put a large json string with all object type names.
-```
-Tschema(struct { "a1b2c3", "", "" })
- => [Tschema][Tobject][sizet=17][sizea=3][Tstring][6]["a1b2c3"][Tstring][0][Tstring][0]
-```
 
 #### 5.4 Tdict
 
@@ -267,11 +254,27 @@ map{
 | [sizet=6]     | 2             | string length: 6           |
 | {"world!"}    | 6             | string content: "world!"   |
 
-#### 5.4 Tdictk and Tdictv
+#### 5.5 Tdictk and Tdictv
 
 Tdictk and Tdictv are used for mark map's key and value begin,
 the real data format determinted by the following Ttype after them
-see example at 5.3 Tdict
+see example at 5.4 Tdict
+
+
+#### 5.6 Tschema
+
+format: [Tschema][Tobject][sizet][sizea=3][data: "type-hash", "type", "content"]
+Tschema leads a Tobject, it specify TSSD's schema info, it is important for TSSD, as TSSD marshal data only without type name. normally marshal 3 string struct(object) into it.
+the first string is type hash, which is necessary.
+**TSSD peer(reader and writer) should share with the same schema.
+TSSD writer put schema in the header to specify the TSSD data schema.
+TSSD reader validate the schema if match with local with the type hash, should block unmarsh if not.**
+User can define the schema type and content , even put a large json string with all object type names.
+```
+Tschema(struct { "a1b2c3", "", "" })
+ => [Tschema][Tobject][sizet=17][sizea=3][Tstring][6]["a1b2c3"][Tstring][0][Tstring][0]
+```
+
 
 ## Tips
 
