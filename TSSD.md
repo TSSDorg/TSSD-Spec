@@ -122,19 +122,7 @@ Tstring is simple, follow a string length, then the string data
 string("Hello TSSD") => [Tstring][sizet=10]{"Hello TSSD"}
 ```
 
-#### 4.2 Tschema
-
-format: [Tschema][sizet][data]
-Tschema works as Tstring, it is important for TSSD, as TSSD marshal data only without type name.
-**TSSD peer(reader and writer) should parse with the same schema.
-TSSD writer put schema in the header to specify the TSSD data schema.
-TSSD reader validate the schema if match with local, should block unmarsh if not.**
-User can define the schema content and validation algorithem themselves, even put a large json string with all object type names.
-```
-Tschema("MyStruct_V2-0f0eff09d0") => [Tschema][sizet=22]{"MyStruct_V2-0f0eff09d0"}
-```
-
-#### 4.3 Ttime
+#### 4.2 Ttime
 
 format: [Ttime][sizet][data]
 Ttime works as Tstring.
@@ -143,7 +131,7 @@ it prensents for timestamp within RFC3339Nano format
 [Ttime][sizet=39]{"2023-06-08 11:34:50.371381984 +0000 UTC"}
 ```
 
-#### 4.4 Tenum
+#### 4.3 Tenum
 
 format: [Tenum][sizet][data]
 Tenum works as Tstring.
@@ -152,12 +140,12 @@ it prensents for enum string
 [Tenum][sizet=9]{"Color.Red"}
 ```
 
-#### 4.5 Traw
+#### 4.4 Traw
 
 format: [Traw][sizet][data]
 Traw means raw data, TSSD just forward it without parse.
 
-#### 4.6 Tuser
+#### 4.5 Tuser
 
 format: [Tuser][sizet][data]
 Tuser means user define data, TSSD process as Traw now. 
@@ -230,6 +218,19 @@ struct { int32(123), string("foobar") }
 | [sizet=5]     | 2             | the string contains 5 byte |
 | {"foobar"}    | 5             | string content: "foobar"   |
 
+#### 5.4 Tschema
+
+format: [Tschema][Tobject][sizet][sizea=3][data: "type-hash", "type", "content"]
+Tschema leads a Tobject, it specify TSSD's schema info, it is important for TSSD, as TSSD marshal data only without type name. normally marshal 3 string struct(object) into it.
+the first string is type hash, which is necessary.
+**TSSD peer(reader and writer) should share with the same schema.
+TSSD writer put schema in the header to specify the TSSD data schema.
+TSSD reader validate the schema if match with local with the type hash, should block unmarsh if not.**
+User can define the schema type and content , even put a large json string with all object type names.
+```
+Tschema(struct { "a1b2c3", "", "" })
+ => [Tschema][Tobject][sizet=17][sizea=3][Tstring][6]["a1b2c3"][Tstring][0][Tstring][0]
+```
 
 #### 5.4 Tdict
 
