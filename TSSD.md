@@ -29,15 +29,15 @@ TSSD programing library should implement both of Big and Little Endians.
   
 ### 1. TSSD header
 
-Format: [Thead='T'][header="SSD"][Tversion='V'][version=1][Tschema='S'][sizet][schema-string]
+Format: [Thead='T'][header="SSD"][Tversion='V'][version=1][Tschema='M'][Tobject][sizet][sizea][schema-data]
 
 | item         | value             | length | desc                                                                          |
 | ------------ | ----------------- | ------ | ----------------------------------------------------------------------------- |
 | Thead        | ['T']             | 1byte  | TSSD header begin                                                             | 
 | header       | ['S','S','D']     | 3bytes | 3 fixed charactar                                                             |
 | Tversion     | ['V']             | 1byte  | version begin                                                                 | 
-| TSSD version | 1                 | 2bytes | TSSD current version: 1, may upgrade in future                                |
-| Tschema      | ['S']             | 1byte  | schema begin                                                                  | 
+| TSSD version | [minor][major]    | 2bytes | TSSD minor major version, current: [1][0]                                     |
+| Tschema      | ['M']             | 1byte  | schema begin                                                                  | 
 | sizet        |                   | 2byte  | schema string length                                                          | 
 | schema string|[string]           | sizet  | dynamic length string, user can define himself, used for data type validation |
 
@@ -50,15 +50,16 @@ There are 2 data formats, fixed-length data and dynamic length data.
 
 2.2 dynamic length data:**[Ttype][SizeT][SizeA][Data]** (our spec name TSSD is from it).
 
-  - SizeT(2bytes): Total size of current chunk, including the following SizeA and Data, but excluding itself.
+  - SizeT(4bytes unsigned number): Total size of current chunk, including the following SizeA and Data, but excluding itself.
 
-  - SizeA(2bytes): Additional size, depends the Ttype, describe in table 2.
+  - SizeA(2bytes unsigned number): Additional size, depends the Ttype, describe in table 2.
 
-**Note: All SizeT or SizeA are int16(2bytes in little endian)**
+**Note: All SizeT or SizeA are both unsigned number in little endian**
 
 sizet same with SizeT, sizea same with SizeA.
 
-both of them print on little endian like that: 123 => [123][0], but this doc print [sizet=123] for short.
+both of them print on little endian like that: sizet => [123][456][0][0], but this doc print sizet=[123][456] for short.
+or sizea = [123][0] print [sizea=123]
 
 
 ### 3. TSSD Ttype definition
@@ -104,7 +105,7 @@ Table 2:
 | Tdictk      | 29     | [Ttype][sizet][...]         |                                     |
 | Tdictv      | 30     | [Ttype][sizet][...]         |                                     |
 | Traw        | 31     | [sizet][data]               |                                     |
-| Tschema     | 83('S')| [sizet][chars]              |                                     |
+| Tschema     | 83('M')| [sizet][chars]              |                                     |
 | Thead       | 84('T')| ["SSD"]                     | 4 bytes MagicHead: "TSSD"           |
 | Tversion    | 86('V')| [version]                   |                                     |
 | Tuser       | 0x7F   | [sizet][user-define-data]   |                                     ||
